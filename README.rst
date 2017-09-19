@@ -1,28 +1,43 @@
-most_common_words
+=================
+Most common words
 =================
 
+
+The utility for determining the most used words
+
+* Free software: MIT
+* Requirements
+
+ * Python>=3.5.3
+ * `nltk==3.2.4 <https://pypi.python.org/pypi/nltk>`_
+
+
+Features
+--------
+
+Finds most used verbs in python source code directories
+
+Usage
 -----
 
-.. contents:: **Table of Contents**
-    :backlinks: none
-
-Installation
-------------
-
-most_common_words is distributed on `PyPI <https://pypi.org>`_ as a universal
-wheel and is available on Linux/macOS and Windows and supports
-Python 3.5+.
+As command line util
 
 .. code-block:: bash
 
-    $ pip install most_common_words
+    $ python -m most_common_words -p path/to/your/source/code/dir1 path/to/your/source/code/dir2 -c minimum_count
 
-License
--------
+or
 
-most_common_words is distributed under the terms of both
+.. code-block:: bash
 
-- `MIT License <https://choosealicense.com/licenses/mit>`_
-- `Apache License, Version 2.0 <https://choosealicense.com/licenses/apache-2.0>`_
+    $ most_common_words -p path/to/your/source/code/dir1 path/to/your/source/code/dir2 -c minimum_count
 
-at your option.
+As library
+
+.. code-block:: python
+
+    import most_common_words as mcw
+    commons = mcw.most_common_verbs(['.', 'path/to/your/source/code/dir'], 10)
+    for word, quantity in commons:
+        print(word, quantity)
+
