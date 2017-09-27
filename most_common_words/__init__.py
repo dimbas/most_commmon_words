@@ -6,9 +6,10 @@ from collections import Counter
 from urllib.error import URLError
 
 from nltk import pos_tag
+from nltk.tokenize import word_tokenize
 from nltk.downloader import Downloader
 
-__version__ = '0.0.5'
+__version__ = '0.0.5-pre.2'
 
 
 def flat(source: t.Iterable) -> list:
@@ -25,13 +26,6 @@ def flat(source: t.Iterable) -> list:
         else:
             ret.append(item)
     return ret
-
-
-def is_verb(word: str) -> bool:
-    if not word:
-        return False
-    pos_info = pos_tag([word])
-    return pos_info[0][1].startswith('VB')
 
 
 def get_all_files(path: Path) -> t.Iterator[Path]:
@@ -53,71 +47,102 @@ def get_trees(path: Path) -> t.Iterator[ast.AST]:
             yield tree
 
 
-def get_verbs_from_function_name(function_name):
-    return [word for word in function_name.split('_') if is_verb(word)]
+def is_magic_name(name: str) -> bool:
+    return name.startswith('__') and name.endswith('__')
 
 
-def get_all_verbs_in_path(path: Path) -> t.Iterator[str]:
-    def is_magic_name(name):
-        return name.startswith('__') and name.endswith('__')
+def is_function(node):
+    return isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))
 
-    def is_function(node):
-        return isinstance(node, ast.FunctionDef) and not is_magic_name(node.name)
 
+def tokenize_names(words: str):
+    # check if name is snake case or CamelCase
+    return pos_tag(word_tokenize(words.replace('_', ' ')))
+
+
+def get_functions_from_path(path: Path) -> t.Iterable[ast.AST]:
     trees = get_trees(path)
-    functions = (node for tree in trees for node in ast.walk(tree) if is_function(node))
-
-    return flat(get_verbs_from_function_name(func.name) for func in functions)
-
-
-def download_data(yes=False, force_download=False):
-    """
-    :param yes: if True, it wont ask to install data (default False)
-    :param force_download: if True, install data anyway (default False)
-    """
-    def question(yes):
-        if yes:
-            return 'yes'
-
-        answer = input('For work you need installed nltk data, do you want to install it? [yes?no]: ').lower()
-        while answer not in ('yes', 'no'):
-            answer = input('Type yes or no: ').lower()
-        return answer
-
-    nltk_downloader = Downloader()
-
-    try:
-        is_installed = nltk_downloader.is_installed('all')
-    except URLError as err:
-        print('You need internet connection to check and download nltk data installation. Aborting!')
-        exit(err.errno)
-
-    if force_download:
-        nltk_downloader.download('all')
-        return
-
-    if is_installed:
-        return
-
-    action = question(yes)
-    if action == 'yes':
-        print('Warning, installing may take some time')
-        nltk_downloader.download('all')
-    else:
-        print('Script cant work without nltk data installed. Aborting!')
-        exit(1)
+    return (node for tree in trees
+            for node in ast.walk(tree) if is_function(node) and not is_magic_name(node.name))
 
 
-def most_common_verbs(paths: list, count: int) -> t.List[t.Tuple]:
-    download_data()
+class MostCommonWords:
+    def __init__(self, config):
+        self.config = config
 
-    words = flat(get_all_verbs_in_path(Path(p)) for p in paths)
-    counter = Counter(words)
+        if self.speech_part == 'verbs':
+            self.get_words = self.most_common_verbs
+        elif self.speech_part == 'nouns':
+            self.get_words = self.most_common_nouns
 
-    return counter.most_common(count)
+        self.nltk_downloader = Downloader()
 
+    @property
+    def path(self):
+        return self.config['path']
 
-def show_most_common_verbs(paths: list, count: int):
-    commons = most_common_verbs(paths, count)
-    for word, quantity in commons:
-        print(word, quantity)
+    @property
+    def speech_part(self):
+        return self.config['speech_part']
+
+    @property
+    def count(self):
+        return self.config['count']
+
+    def get_names(self) -> t.Iterable[str]:
+        return (func.name for func in get_functions_from_path(self.path))
+
+    def most_common_verbs(self) -> t.Iterable[t.Tuple]:
+        return filter(lambda x: x[1] >= self.count, Counter(self.get_all_verbs()).most_common())
+
+    def get_all_verbs(self) -> t.Iterable[str]:
+        words_n_tags = flat(tokenize_names(x) for x in self.get_names())
+        return filter(lambda x: x[1].startswith('VB'), words_n_tags)
+
+    def most_common_nouns(self) -> t.Iterable[t.Tuple]:
+        return filter(lambda x: x[1] >= self.count, Counter(self.get_all_nouns()).most_common())
+
+    def get_all_nouns(self) -> t.Iterable[str]:
+        words_n_tags = flat(tokenize_names(x) for x in self.get_names())
+        return filter(lambda x: x[1].startswith('NN'), words_n_tags)
+
+    def download_nltk_data(self, yes=False, force_download=False):
+        """
+        :param yes: if True, it wont ask to install data (default False)
+        :param force_download: if True, install data anyway (default False)
+        """
+        class InternetError(URLError):
+            code = 1
+
+        class DownloadError(ImportError):
+            code = 2
+
+        def question(yes):
+            if yes:
+                return 'yes'
+
+            answer = input('For work you need installed nltk data, do you want to install it? [yes?no]: ').lower()
+            while answer not in ('yes', 'no'):
+                answer = input('Type yes or no: ').lower()
+            return answer
+
+        try:
+            is_installed = self.nltk_downloader.is_installed('all')
+        except URLError as err:
+            print('You need internet connection to check and download nltk data installation. Aborting!')
+            raise InternetError(err.reason) from err
+
+        if force_download:
+            self.nltk_downloader.download('all')
+            return
+
+        if is_installed:
+            return
+
+        action = question(yes)
+        if action == 'yes':
+            print('Warning, installing may take some time')
+            self.nltk_downloader.download('all')
+        else:
+            print('Script cant work without nltk data installed. Aborting!')
+            raise DownloadError
