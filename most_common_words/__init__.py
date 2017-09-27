@@ -7,15 +7,21 @@ from collections import Counter
 from nltk import pos_tag
 from nltk.downloader import Downloader
 
-__version__ = '0.0.1'
+__version__ = '0.0.2'
 
 
-def flat(_list: t.Iterable) -> list:
+def flat(source: t.Iterable) -> list:
     """
     >>> flat([(1,2), (3,4)])
     ... [1, 2, 3, 4]
     """
-    return sum([list(item) for item in _list], [])
+    ret = []
+    for item in source:
+        if isinstance(item, list):
+            ret.extend(item)
+        else:
+            ret.append(item)
+    return ret
 
 
 def is_verb(word: str) -> bool:
