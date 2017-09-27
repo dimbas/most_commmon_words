@@ -3,17 +3,20 @@ import ast
 import typing as t
 from pathlib import Path
 from collections import Counter
+from urllib.error import URLError
 
 from nltk import pos_tag
 from nltk.downloader import Downloader
 
-__version__ = '0.0.4-rc.2'
+__version__ = '0.0.5'
 
 
 def flat(source: t.Iterable) -> list:
     """
     >>> flat([(1,2), (3,4)])
     ... [1, 2, 3, 4]
+    >>> flat([[1,2], [[3,4],5]])
+    ... [1, 2, [3, 4], 5]
     """
     ret = []
     for item in source:
@@ -70,19 +73,28 @@ def get_all_verbs_in_path(path: Path) -> t.Iterator[str]:
 def download_data():
     def question():
         answer = input('For work you need installed nltk data, do you want to install it? [yes?no]: ')
-        while answer not in 'yesno':
+        while answer not in ('yes', 'no'):
             answer = input('Type yes or no: ')
         return answer
 
     nltk_downloader = Downloader()
-    if not nltk_downloader.is_installed('all'):
-        action = question()
-        if action == 'yes':
-            print('Warning, installing may take some time')
-            nltk_downloader.download('all')
-        else:
-            print('Script cant work without nltk data installed. Aborting!')
-            exit(1)
+
+    try:
+        is_installed = nltk_downloader.is_installed('all')
+    except URLError as err:
+        print('You need internet connection to check and download nltk data installation. Aborting!')
+        exit(err.errno)
+
+    if is_installed:
+        return
+
+    action = question()
+    if action == 'yes':
+        print('Warning, installing may take some time')
+        nltk_downloader.download('all')
+    else:
+        print('Script cant work without nltk data installed. Aborting!')
+        exit(1)
 
 
 def most_common_verbs(paths: list, count: int) -> t.List[t.Tuple]:
