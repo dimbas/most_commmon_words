@@ -7,7 +7,7 @@ from collections import Counter
 from nltk import pos_tag
 from nltk.downloader import Downloader
 
-__version__ = '0.0.2'
+__version__ = '0.0.3'
 
 
 def flat(source: t.Iterable) -> list:
@@ -28,7 +28,7 @@ def is_verb(word: str) -> bool:
     if not word:
         return False
     pos_info = pos_tag([word])
-    return pos_info[0][1] == 'VB'
+    return pos_info[0][1].startswith('VB')
 
 
 def get_all_files(path: Path) -> t.Iterator[Path]:
