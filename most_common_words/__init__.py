@@ -7,7 +7,7 @@ from collections import Counter
 from nltk import pos_tag
 from nltk.downloader import Downloader
 
-__version__ = '0.0.3'
+__version__ = '0.0.4-rc.1'
 
 
 def flat(source: t.Iterable) -> list:
@@ -55,9 +55,14 @@ def get_verbs_from_function_name(function_name):
 
 
 def get_all_verbs_in_path(path: Path) -> t.Iterator[str]:
+    def is_magic_name(name):
+        return name.startswith('__') and name.endswith('__')
+
+    def is_function(node):
+        return isinstance(node, ast.FunctionDef) and not is_magic_name(node.name)
+
     trees = get_trees(path)
-    functions = (node for tree in trees for node in ast.walk(tree)
-                 if isinstance(node, ast.FunctionDef) and not (node.name.startswith('__') or node.name.endswith('__')))
+    functions = (node for tree in trees for node in ast.walk(tree) if is_function(node))
 
     return flat(get_verbs_from_function_name(func.name) for func in functions)
 
