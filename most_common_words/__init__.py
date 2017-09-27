@@ -7,7 +7,7 @@ from collections import Counter
 from nltk import pos_tag
 from nltk.downloader import Downloader
 
-__version__ = '0.0.4-rc.1'
+__version__ = '0.0.4-rc.2'
 
 
 def flat(source: t.Iterable) -> list:
@@ -67,10 +67,26 @@ def get_all_verbs_in_path(path: Path) -> t.Iterator[str]:
     return flat(get_verbs_from_function_name(func.name) for func in functions)
 
 
-def most_common_verbs(paths: list, count: int) -> t.List[t.Tuple]:
+def download_data():
+    def question():
+        answer = input('For work you need installed nltk data, do you want to install it? [yes?no]: ')
+        while answer not in 'yesno':
+            answer = input('Type yes or no: ')
+        return answer
+
     nltk_downloader = Downloader()
     if not nltk_downloader.is_installed('all'):
-        nltk_downloader.download('all')
+        action = question()
+        if action == 'yes':
+            print('Warning, installing may take some time')
+            nltk_downloader.download('all')
+        else:
+            print('Script cant work without nltk data installed. Aborting!')
+            exit(1)
+
+
+def most_common_verbs(paths: list, count: int) -> t.List[t.Tuple]:
+    download_data()
 
     words = flat(get_all_verbs_in_path(Path(p)) for p in paths)
     counter = Counter(words)
