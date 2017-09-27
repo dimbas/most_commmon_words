@@ -41,3 +41,7 @@ As library
     for word, quantity in commons:
         print(word, quantity)
 
+
+Util needs nltk data to be downloaded, so if it is not installed script will ack you to download it (it may take tome time).
+
+You can use `download_data()` call to check and download nltk data. It gets 2 optional boolean arguments: yes and force_download.

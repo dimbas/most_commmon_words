@@ -70,11 +70,18 @@ def get_all_verbs_in_path(path: Path) -> t.Iterator[str]:
     return flat(get_verbs_from_function_name(func.name) for func in functions)
 
 
-def download_data():
-    def question():
-        answer = input('For work you need installed nltk data, do you want to install it? [yes?no]: ')
+def download_data(yes=False, force_download=False):
+    """
+    :param yes: if True, it wont ask to install data (default False)
+    :param force_download: if True, install data anyway (default False)
+    """
+    def question(yes):
+        if yes:
+            return 'yes'
+
+        answer = input('For work you need installed nltk data, do you want to install it? [yes?no]: ').lower()
         while answer not in ('yes', 'no'):
-            answer = input('Type yes or no: ')
+            answer = input('Type yes or no: ').lower()
         return answer
 
     nltk_downloader = Downloader()
@@ -85,10 +92,14 @@ def download_data():
         print('You need internet connection to check and download nltk data installation. Aborting!')
         exit(err.errno)
 
+    if force_download:
+        nltk_downloader.download('all')
+        return
+
     if is_installed:
         return
 
-    action = question()
+    action = question(yes)
     if action == 'yes':
         print('Warning, installing may take some time')
         nltk_downloader.download('all')
