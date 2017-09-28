@@ -29,10 +29,7 @@ def main(config):
         processor.download_nltk_data()
     except Exception as err:
         print('Cant check or download nltk data because of error {}'.format(err))
-        if hasattr(err, 'code'):
-            return err.code
-        else:
-            return -1
+        return err.code if hasattr(err, 'code') else -1
 
     words = processor.get_words()
     show_most_common_words(words, processor.speech_part, processor.path)
