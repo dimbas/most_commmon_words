@@ -9,7 +9,7 @@ from most_common_words import MostCommonWords
 def parseargs(args=None):
     parser = argparse.ArgumentParser()
     parser.add_argument('-p', '--path', default='.', type=Path, help='path to project')
-    parser.add_argument('-c', '--count', default=200, type=int, help='determines minimum number of occurrences words')
+    parser.add_argument('-c', '--count', default=2, type=int, help='determines minimum number of occurrences words')
     parser.add_argument('-s', '--speech-part', choices=['verbs', 'nouns'], default='verbs',
                         help='choose what part of speech to search')
 
