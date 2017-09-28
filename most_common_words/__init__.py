@@ -1,5 +1,9 @@
 # coding=utf-8
 
 from .mcw import MostCommonWords
+from .utils import flat
+from .nltk_downloader import NLTKDownloader, NLTKDownloaderError
 
 __version__ = '0.0.6'
+
+__all__ = ('MostCommonWords', 'flat', 'NLTKDownloader', 'NLTKDownloaderError')

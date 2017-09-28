@@ -3,7 +3,7 @@ import sys
 import argparse
 from pathlib import Path
 
-from most_common_words import MostCommonWords
+from most_common_words import MostCommonWords, NLTKDownloader, NLTKDownloaderError
 
 
 def parseargs(args=None):
@@ -24,12 +24,16 @@ def show_most_common_words(words, speech_part, path: Path):
 
 def main(config):
     processor = MostCommonWords(config)
+    downloader = NLTKDownloader()
 
     try:
-        processor.download_nltk_data()
+        downloader.check_installation()
+    except NLTKDownloaderError as err:
+        print('Cant check or download nltk data because of error {}'.format(err))
+        return err.code
     except Exception as err:
         print('Cant check or download nltk data because of error {}'.format(err))
-        return err.code if hasattr(err, 'code') else -1
+        return -1
 
     words = processor.get_words()
     show_most_common_words(words, processor.speech_part, processor.path)

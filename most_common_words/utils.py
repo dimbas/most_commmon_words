@@ -24,7 +24,7 @@ def is_magic_name(name: str) -> bool:
     return name.startswith('__') and name.endswith('__')
 
 
-def is_function(node):
+def is_function(node: ast.AST):
     return isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))
 
 
