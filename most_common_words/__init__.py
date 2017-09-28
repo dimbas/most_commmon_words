@@ -9,7 +9,7 @@ from nltk import pos_tag
 from nltk.tokenize import word_tokenize
 from nltk.downloader import Downloader
 
-__version__ = '0.0.5-pre.2'
+__version__ = '0.0.6'
 
 
 def flat(source: t.Iterable) -> list:
@@ -71,9 +71,9 @@ class MostCommonWords:
         self.config = config
 
         if self.speech_part == 'verbs':
-            self.get_words = self.most_common_verbs
+            self.get_words = self._most_common_verbs
         elif self.speech_part == 'nouns':
-            self.get_words = self.most_common_nouns
+            self.get_words = self._most_common_nouns
 
         self.nltk_downloader = Downloader()
 
@@ -89,22 +89,22 @@ class MostCommonWords:
     def count(self):
         return self.config['count']
 
-    def get_names(self) -> t.Iterable[str]:
+    def _get_names(self) -> t.Iterable[str]:
         return (func.name for func in get_functions_from_path(self.path))
 
-    def most_common_verbs(self) -> t.Iterable[t.Tuple]:
-        return filter(lambda x: x[1] >= self.count, Counter(self.get_all_verbs()).most_common())
+    def _most_common_verbs(self) -> t.Iterable[t.Tuple]:
+        return filter(lambda x: x[1] >= self.count, Counter(self._get_all_verbs()).most_common())
 
-    def get_all_verbs(self) -> t.Iterable[str]:
-        words_n_tags = flat(tokenize_names(x) for x in self.get_names())
-        return filter(lambda x: x[1].startswith('VB'), words_n_tags)
+    def _get_all_verbs(self) -> t.Iterable[str]:
+        words_n_tags = flat(tokenize_names(x) for x in self._get_names())
+        return (word for word, tag in words_n_tags if tag.startswith('VB'))
 
-    def most_common_nouns(self) -> t.Iterable[t.Tuple]:
-        return filter(lambda x: x[1] >= self.count, Counter(self.get_all_nouns()).most_common())
+    def _most_common_nouns(self) -> t.Iterable[t.Tuple]:
+        return filter(lambda x: x[1] >= self.count, Counter(self._get_all_nouns()).most_common())
 
-    def get_all_nouns(self) -> t.Iterable[str]:
-        words_n_tags = flat(tokenize_names(x) for x in self.get_names())
-        return filter(lambda x: x[1].startswith('NN'), words_n_tags)
+    def _get_all_nouns(self) -> t.Iterable[str]:
+        words_n_tags = flat(tokenize_names(x) for x in self._get_names())
+        return (word for word, tag in words_n_tags if tag.startswith('NN'))
 
     def download_nltk_data(self, yes=False, force_download=False):
         """

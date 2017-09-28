@@ -3,7 +3,7 @@ Most common words
 =================
 
 
-The utility for determining the most used words
+The utility for determining the most used words in python source code
 
 * Free software: MIT
 * Requirements
@@ -47,7 +47,7 @@ As library
 
 Util needs nltk data to be downloaded, so if it is not installed script will ack you to download it (it may take tome time).
 
-You can use `download_nltk_data()` method call of MostCommonWords instance to check and download nltk data. It gets 2 optional boolean arguments: yes and force_download.
+You can use ``download_nltk_data()`` method call of MostCommonWords instance to check and download nltk data. It gets 2 optional boolean arguments: yes and force_download.
 Or you can use raw nlyk methods:
 
 .. code-block:: python
@@ -56,3 +56,21 @@ Or you can use raw nlyk methods:
     downloader = Downloader()
     if not downloader.is_installed('all'):
         downloader.download('all')
+
+Options
+-------
+
+Run ``most_common_words --help`` for a full list of options and their effects.
+
+.. code-block:: bash
+
+    $ most_common_words --help
+    usage: most_common_words [-h] [-p PATH] [-c COUNT] [-s {verbs,nouns}]
+
+    optional arguments:
+      -h, --help            show this help message and exit
+      -p PATH, --path PATH  project destination
+      -c COUNT, --count COUNT
+                            determines minimum number of occurrences words
+      -s {verbs,nouns}, --speech-part {verbs,nouns}
+                            choose what part of speech to search
