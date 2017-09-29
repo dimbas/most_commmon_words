@@ -12,11 +12,13 @@ The utility for determining the most used words in python source code
  * `nltk==3.2.4 <https://pypi.python.org/pypi/nltk>`_
 
 
+--------
 Features
 --------
 
 Finds most used verbs or nouns in python project
 
+-----
 Usage
 -----
 
@@ -42,9 +44,22 @@ As library
     downloader = mcw.NLTKDownloader()
     downloader.check_installation(yes=True) # if you don`t know if data installed or not. it will installed automatically
     words = processor.get_words()
-    for word, quantity in words:
-        print(word, quantity)
 
+You can print returned words through builtin print. Example:
+
+.. code-block:: python
+
+    for word, times in words:
+        print(word, times)
+
+Or through ``Printer`` instance:
+
+.. code-block:: python
+
+    printer = mcw.Printer(config)
+    printer.print(words)
+
+Note: printer config requires `format` and `pretty` keys. `Format` on of 3 supported output formats (csv, json, humanable) and `pretty` if output must be prettified if it can be done.
 
 Util needs nltk data to be downloaded, so if it is not installed script will ack you to download it (it may take tome time).
 
@@ -58,6 +73,7 @@ Or you can use raw nltk methods:
     if not downloader.is_installed('all'):
         downloader.download('all')
 
+-------
 Options
 -------
 
@@ -67,11 +83,172 @@ Run ``most_common_words --help`` for a full list of options and their effects.
 
     $ most_common_words --help
     usage: most_common_words [-h] [-p PATH] [-c COUNT] [-s {verbs,nouns}]
+                             [-f {json,csv,humanable}] [--pretty]
 
     optional arguments:
       -h, --help            show this help message and exit
-      -p PATH, --path PATH  project destination
+      -p PATH, --path PATH  Path to project. Default current folder.
       -c COUNT, --count COUNT
-                            determines minimum number of occurrences words
+                            Determines minimum number of occurrences words.
+                            Default 2.
       -s {verbs,nouns}, --speech-part {verbs,nouns}
-                            choose what part of speech to search
+                            Choose what part of speech to search. Default verbs.
+      -f {json,csv,humanable}, --format {json,csv,humanable}
+                            Chose output format. Default humanable.
+      --pretty              Prettify output
+
+
+---
+API
+---
+
+module ``most_common_words.mcw``
+================================
+
+class ``most_common_words.mcw.MostCommonWords``
+-----------------------------------------------
+
+Main class
+
+:attr: ``config``
+
+    Holds base configuration.
+
+:method: ``get_words() -> Iterable[tuple[word, count]]``
+
+    Main function (aka entry point). Returns list of tuples there first element is word, second - count.
+
+
+module ``most_common_words.utils``
+==================================
+
+Contains some helper functions
+
+:function: ``flat(source: list) -> list``
+
+    Unfolds received list of list and returns result. Not recursive, only 1 depth.
+
+:function: ``is_magic_name(name: str) -> bool``
+
+    Checks, is name is magic (starts and ends with double-underline symbols) or not.
+
+:function: ``is_function(node: ast.AST) -> bool``
+
+    Checks, if given ast node if function or not.
+
+:function: ``tokenize_names(word: str) -> list[tuple[word, tag]]``
+
+    Gets name, tokenize it and returns list of words, with nltk speech part tag.
+
+
+module ``most_common_words.paths``
+==================================
+
+Contains functions to work with os folders, to parse source code and build ast
+
+:function: ``get_all_files(path: pathlib.Path) -> Iterator[pathlib.Path]``
+
+    Generator, walks through folders recursively and yields all files, wrapped in pathlib.Path.
+
+:function: ``get_trees(path: pathlib.Path) -> Iterator[ast.AST]``
+
+    Generator, yields ast from each file in path arg (calls ``get_all_files`` inside)
+
+:function: ``get_functions_from_path(path: pathlib.Path) -> Iterable[ast.AST]``
+
+    Generator, yields function nodes from all ast (calls ``get_trees`` inside)
+
+
+module ``most_common_words.nltk_downloader``
+============================================
+
+Contains class encapsulates nltk data download logic and exceptions
+
+class ``most_common_words.nltk_downloader.NLTKDownloader``
+----------------------------------------------------------
+
+Encapsulates download logic.
+
+:attr: ``data_id``
+
+    Nltk data id. By default ``'all'``
+
+:method: ``check_installation(yes: bool, force_download: bool)``
+
+    Checks, if nltk data is installed (by id from data_id). If it doesnt installed, asks permission to install in interactive mode and tries to download and install if permitted.
+    If argument ``yes`` equals ``True``, than don't ask the permission and starts installation immediately. If argument ``force_download`` equals ``True``, than don't check installation and starts installation.
+
+:method: ``_aks(yes: bool) -> str``
+
+    If argument ``yes`` is ``False``, than asks user in interactive mode, start installation or not. Waits for `yes` or `no` only.
+    If argument ``yes`` is ``True``, than don't start interactive session and returns.
+
+
+class ``most_common_words.nltk_downloader.NLTKDownloaderError``
+---------------------------------------------------------------
+
+Base downloader exception.
+
+class ``most_common_words.nltk_downloader.DownloadError``
+---------------------------------------------------------
+
+Error class, throws if data not installed and user rejected it. Inherits from ``most_common_words.nltk_downloader.NLTKDownloaderError``
+
+class ``most_common_words.nltk_downloader.InternetError``
+---------------------------------------------------------
+
+Error class, throws if something throng with Internet connection. Installation check even needs internet. Inherits from ``most_common_words.nltk_downloader.NLTKDownloaderError``
+
+
+module ``most_common_words.printer``
+====================================
+
+Contains output logic
+
+class ``most_common_words.printer.Printer``
+-------------------------------------------
+
+Encapsulates printer logic.
+
+:attr: ``config``
+
+    Holds base configuration.
+
+:property: ``formatter_cls``
+
+    Returns formatter class according on config
+
+:method: ``print(data: Iterable[tuple[word, count]])``
+
+    Formats message from data and prints it.
+
+
+package ``most_common_words.formatter``
+=======================================
+
+Package contains different formatter's implementations
+
+class ``most_common_words.formatter.base.Formatter``
+----------------------------------------------------
+
+Abstract base class for any new formatter.
+
+:absractmethod: ``format(data: Iterable[tuple[word, count]]) -> str``
+
+    Main abstract method. Eny realization must receive data and return string.
+
+class ``most_common_words.formatter.csv.CsvFormatter``
+------------------------------------------------------
+
+Implements abc ``most_common_words.formatter.base.Formatter``. Output is CSV.
+
+class ``most_common_words.formatter.json.JsonFormatter``
+--------------------------------------------------------
+
+Implements abc ``most_common_words.formatter.base.Formatter``. Output is JSON.
+
+class ``most_common_words.formatter.humanable.HumanableFormatter``
+------------------------------------------------------------------
+
+Implements abc ``most_common_words.formatter.base.Formatter``. Used as default, for humans.
+
