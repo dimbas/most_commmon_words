@@ -5,7 +5,7 @@ from .utils import flat
 from .nltk_downloader import NLTKDownloader, NLTKDownloaderError, check_nltk_data_installation
 from .printer import Printer
 
-__version__ = '0.0.7+build.1'
+__version__ = '0.0.8'
 
 __all__ = (
     'MostCommonWords',

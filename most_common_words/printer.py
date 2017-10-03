@@ -1,16 +1,26 @@
-from most_common_words import formatter
+from . import formatter, writer
 
 
 class Printer:
     def __init__(self, config):
         self.config = config
-        self.formatter = self.formatter_cls(config)
 
     @property
-    def formatter_cls(self):
+    def formatter(self):
         name = self.config['format'].capitalize() + 'Formatter'
-        return getattr(formatter, name)
+        return getattr(formatter, name)(self.config)
+
+    @property
+    def writer(self):
+        if self.config['writer']:
+            return self.config['writer']
+
+        if self.config['output']:
+            return writer.FileWriter(self.config['output'])
+
+        name = self.config['console'].capitalize() + 'Writer'
+        return getattr(writer, name)()
 
     def print(self, data):
         message = self.formatter.format(data)
-        print(message)
+        self.writer.write(message)

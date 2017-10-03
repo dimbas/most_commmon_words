@@ -222,9 +222,14 @@ Encapsulates printer logic.
 
     Holds base configuration.
 
-:property: ``formatter_cls``
+:property: ``formatter``
 
     Returns formatter class according on config
+
+:property: ``writer``
+
+    Returns configured Writer instance for current pointer. If searches config for key `writer`, if it presents return it. Otherwise it looks for `output` key, if its not ``None`` than return FileWriter targeting on file from config['output'] value.
+    Otherwise it looks on `console``s key value and returns responding Writer (StdoutWriter or StdoutWriter).
 
 :method: ``print(data: Iterable[tuple[word, count]])``
 
@@ -260,3 +265,23 @@ class ``most_common_words.formatter.humanable.HumanableFormatter``
 
 Implements abc ``most_common_words.formatter.base.Formatter``. Used as default, for humans.
 
+
+module ``most_common_words.writer``
+====================================
+
+Contains classes, responsible for writing data for different places. All classes have only one method: ``write(data: str)``, which writes data.
+
+class ``most_common_words.writer.FileWriter``
+---------------------------------------------
+
+Writes data to file. Constructor accepts file as ``pathlib.Path`` instance. Overrides existing file!
+
+class ``most_common_words.writer.StdoutWriter``
+-----------------------------------------------
+
+Writes data to stdout.
+
+class ``most_common_words.writer.StderrWriter``
+-----------------------------------------------
+
+Writes data to stderr.

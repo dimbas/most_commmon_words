@@ -3,7 +3,7 @@ import sys
 import argparse
 from pathlib import Path
 
-from most_common_words import MostCommonWords, Printer, check_nltk_data_installation
+from . import MostCommonWords, Printer, check_nltk_data_installation
 
 
 def parseargs(args=None):
@@ -17,6 +17,11 @@ def parseargs(args=None):
                         help='Chose output format. Default humanable.')
     parser.add_argument('--pretty', action='store_true', help='Prettify output')
     parser.add_argument('--skip-data-check', action='store_true', help='Skips nltk data installation')
+
+    printer = parser.add_mutually_exclusive_group()
+    printer.add_argument('--console', choices=['stdout', 'stderr'], default='stdout',
+                         help='Prints returned data to stdout or stderr')
+    printer.add_argument('-o', '--output', type=Path, help='Prints returned data to file. (Overrides existing file!)')
 
     return parser.parse_args(args)
 
