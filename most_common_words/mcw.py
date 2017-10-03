@@ -1,9 +1,8 @@
+import ast
 import typing as t
 from collections import Counter
 
-from nltk.downloader import Downloader
-
-from .paths import get_functions_from_path
+from .paths import get_functions_from_path, get_variables_from_path
 from .utils import flat, tokenize_names
 
 
@@ -16,7 +15,10 @@ class MostCommonWords:
         elif self.speech_part == 'nouns':
             self.get_words = self._most_common_nouns
 
-        self.nltk_downloader = Downloader()
+        if self.config['variables']:
+            self._get_names = self._get_variables_names
+        else:
+            self._get_names = self._get_functions_names
 
     @property
     def path(self):
@@ -30,8 +32,17 @@ class MostCommonWords:
     def count(self):
         return self.config['count']
 
-    def _get_names(self) -> t.Iterable[str]:
+    def _get_functions_names(self) -> t.Iterable[str]:
         return (func.name for func in get_functions_from_path(self.path))
+
+    def _get_variables_names(self) -> t.Iterable[str]:
+        def _get_name(node: ast.AST):
+            if isinstance(node, ast.Name):
+                return node.id
+            if isinstance(node, ast.Attribute):
+                return node.attr
+
+        return (_get_name(var) for var in get_variables_from_path(self.path))
 
     def _most_common_verbs(self) -> t.Iterable[t.Tuple]:
         return filter(lambda x: x[1] >= self.count, Counter(self._get_all_verbs()).most_common())

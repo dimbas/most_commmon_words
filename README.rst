@@ -84,6 +84,8 @@ Run ``most_common_words --help`` for a full list of options and their effects.
     usage: most_common_words [-h] [-p PATH] [-c COUNT] [-s {verbs,nouns}]
                              [-f {json,csv,humanable}] [--pretty]
                              [--skip-data-check]
+                             [--functions | --variables]
+
 
     optional arguments:
       -h, --help            show this help message and exit
@@ -97,7 +99,8 @@ Run ``most_common_words --help`` for a full list of options and their effects.
                             Chose output format. Default humanable.
       --pretty              Prettify output
       --skip-data-check     Skips nltk data installation
-
+      --functions           Goes through function names
+      --variables           Goes through variable names
 
 ---
 API
@@ -114,6 +117,13 @@ Main class
 :attr: ``config``
 
     Holds base configuration.
+    Must have:
+
+        - path: ``pathlib.Path`` instance
+        - speech_part: `nouns` or `verbs`, str
+        - count: minimum number of occurrences words, int
+        - variables: go through variables in project, bool (excludes `functions` key)
+        - functions: go through functions in project, bool (excludes `variables` key)
 
 :method: ``get_words() -> Iterable[tuple[word, count]]``
 
@@ -125,17 +135,21 @@ module ``most_common_words.utils``
 
 Contains some helper functions
 
-:function: ``flat(source: list) -> list``
+:function: ``flat(source: t.Iterable) -> t.Iterable``
 
-    Unfolds received list of list and returns result. Not recursive, only 1 depth.
+    Generator, yields item's content if its iterable (list, tuple, generator), otherwise yields item itself. Non recursive.
 
 :function: ``is_magic_name(name: str) -> bool``
 
-    Checks, is name is magic (starts and ends with double-underline symbols) or not.
+    Checks, if name is magic (starts and ends with double-underline symbols) or not.
 
 :function: ``is_function(node: ast.AST) -> bool``
 
-    Checks, if given ast node if function or not.
+    Checks, if given ast node is function or not.
+
+:function: ``is_assign(node: ast.AST) -> bool``
+
+    Checks, if given ast node is assign or not.
 
 :function: ``tokenize_names(word: str) -> list[tuple[word, tag]]``
 
@@ -159,6 +173,9 @@ Contains functions to work with os folders, to parse source code and build ast
 
     Generator, yields function nodes from all ast (calls ``get_trees`` inside)
 
+:function: ``get_variables_from_path(path: pathlib.Path) -> Iterable[ast.AST]``
+
+    Generator, yields assign's nodes targets from all ast (calls ``get_trees`` inside)
 
 module ``most_common_words.nltk_downloader``
 ============================================
@@ -221,6 +238,11 @@ Encapsulates printer logic.
 :attr: ``config``
 
     Holds base configuration.
+    Must have:
+        - format: one of `csv`, `json` or `humanable`
+        - writer: configured instance of any class from ``most_common_words.writer`` module (optional, excludes `output` and `console` keys)
+        - output: ``pathlib.Path`` instance (excludes `console` key)
+        - console: one of `stdout` or `stderr` (excludes `output` key)
 
 :property: ``formatter``
 
@@ -229,7 +251,7 @@ Encapsulates printer logic.
 :property: ``writer``
 
     Returns configured Writer instance for current pointer. If searches config for key `writer`, if it presents return it. Otherwise it looks for `output` key, if its not ``None`` than return FileWriter targeting on file from config['output'] value.
-    Otherwise it looks on `console``s key value and returns responding Writer (StdoutWriter or StdoutWriter).
+    Otherwise it looks on `console`'s key value and returns responding Writer (StdoutWriter or StdoutWriter).
 
 :method: ``print(data: Iterable[tuple[word, count]])``
 
@@ -245,6 +267,21 @@ class ``most_common_words.formatter.base.Formatter``
 ----------------------------------------------------
 
 Abstract base class for any new formatter.
+
+:attr: ``config``
+
+    Holds base configuration.
+    Must have:
+        - pretty: prettify output or not, bool
+        - speech_part: `nouns` or `verbs`, str
+
+:property: ``is_pretty``
+
+    Returns `pretty` key from config.
+
+:property: ``speech_part``
+
+    Returns `speech_part` key from config.
 
 :absractmethod: ``format(data: Iterable[tuple[word, count]]) -> str``
 
@@ -265,6 +302,9 @@ class ``most_common_words.formatter.humanable.HumanableFormatter``
 
 Implements abc ``most_common_words.formatter.base.Formatter``. Used as default, for humans.
 
+:property: ``path``
+
+    Returns `path` key from config.
 
 module ``most_common_words.writer``
 ====================================

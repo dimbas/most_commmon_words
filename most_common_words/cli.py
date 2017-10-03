@@ -23,6 +23,10 @@ def parseargs(args=None):
                          help='Prints returned data to stdout or stderr')
     printer.add_argument('-o', '--output', type=Path, help='Prints returned data to file. (Overrides existing file!)')
 
+    funcs_or_vars = parser.add_mutually_exclusive_group()
+    funcs_or_vars.add_argument('--functions', action='store_true', help='Goes through function names')
+    funcs_or_vars.add_argument('--variables', action='store_true', help='Goes through variable names')
+
     return parser.parse_args(args)
 
 
