@@ -3,7 +3,7 @@ import sys
 import argparse
 from pathlib import Path
 
-from most_common_words import MostCommonWords, NLTKDownloader, NLTKDownloaderError, Printer
+from most_common_words import MostCommonWords, Printer, check_nltk_data_installation
 
 
 def parseargs(args=None):
@@ -16,23 +16,19 @@ def parseargs(args=None):
     parser.add_argument('-f', '--format', choices=['json', 'csv', 'humanable'], default='humanable',
                         help='Chose output format. Default humanable.')
     parser.add_argument('--pretty', action='store_true', help='Prettify output')
+    parser.add_argument('--skip-data-check', action='store_true', help='Skips nltk data installation')
 
     return parser.parse_args(args)
 
 
 def main(config):
     processor = MostCommonWords(config)
-    downloader = NLTKDownloader()
     printer = Printer(config)
 
-    try:
-        downloader.check_installation()
-    except NLTKDownloaderError as err:
-        print('Cant check or download nltk data because of error {}'.format(err))
-        return err.code
-    except Exception as err:
-        print('Cant check or download nltk data because of error {}'.format(err))
-        return -1
+    if not config['skip_data_check']:
+        ret = check_nltk_data_installation()
+        if ret is not None:
+            return ret
 
     words = processor.get_words()
     printer.print(words)

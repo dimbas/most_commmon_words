@@ -52,3 +52,15 @@ class NLTKDownloader(Downloader):
         else:
             print('Script cant work without nltk data installed. Aborting!')
             raise DownloadError
+
+
+def check_nltk_data_installation(yes=False, force_download=False):
+    downloader = NLTKDownloader()
+    try:
+        downloader.check_installation(yes, force_download)
+    except NLTKDownloaderError as err:
+        print('Cant check or download nltk data because of error {}'.format(err))
+        return err.code
+    except Exception as err:
+        print('Cant check or download nltk data because of error {}'.format(err))
+        return -1

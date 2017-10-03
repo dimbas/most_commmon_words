@@ -41,8 +41,7 @@ As library
     import most_common_words as mcw
     config = {'path': '/your/path/to/project', 'count': any_count, 'speech_part': 'verbs or nouns'}
     processor = mcw.MostCommonWords(config)
-    downloader = mcw.NLTKDownloader()
-    downloader.check_installation(yes=True) # if you don`t know if data installed or not. it will installed automatically
+    mcw.check_nltk_data_installation(yes=True)  # if you don`t know if data installed or not. it will installed automatically
     words = processor.get_words()
 
 You can print returned words through builtin print. Example:
@@ -84,6 +83,7 @@ Run ``most_common_words --help`` for a full list of options and their effects.
     $ most_common_words --help
     usage: most_common_words [-h] [-p PATH] [-c COUNT] [-s {verbs,nouns}]
                              [-f {json,csv,humanable}] [--pretty]
+                             [--skip-data-check]
 
     optional arguments:
       -h, --help            show this help message and exit
@@ -96,6 +96,7 @@ Run ``most_common_words --help`` for a full list of options and their effects.
       -f {json,csv,humanable}, --format {json,csv,humanable}
                             Chose output format. Default humanable.
       --pretty              Prettify output
+      --skip-data-check     Skips nltk data installation
 
 
 ---
@@ -163,6 +164,13 @@ module ``most_common_words.nltk_downloader``
 ============================================
 
 Contains class encapsulates nltk data download logic and exceptions
+
+:function: ``check_nltk_data_installation(yes=False: bool, force_download=False: bool)`` -> [int, None]
+
+    Checks, if nltk data is installed. If it doesnt installed, asks permission to install in interactive mode and tries to download and install if permitted.
+    If argument ``yes`` equals ``True``, than don't ask the permission and starts installation immediately. If argument ``force_download`` equals ``True``, than don't check installation and starts installation.
+    In case of success it returns ``None``, otherwise returns error code.
+
 
 class ``most_common_words.nltk_downloader.NLTKDownloader``
 ----------------------------------------------------------
