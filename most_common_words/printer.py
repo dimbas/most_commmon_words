@@ -12,7 +12,7 @@ class Printer:
 
     @property
     def writer(self):
-        if self.config['writer']:
+        if 'writer' in self.config:
             return self.config['writer']
 
         if self.config['output']:
