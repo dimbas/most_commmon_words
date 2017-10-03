@@ -84,6 +84,7 @@ Run ``most_common_words --help`` for a full list of options and their effects.
     usage: most_common_words [-h] [-p PATH] [-c COUNT] [-s {verbs,nouns}]
                              [-f {json,csv,humanable}] [--pretty]
                              [--skip-data-check]
+                             [--console {stdout,stderr} | -o OUTPUT]
 
     optional arguments:
       -h, --help            show this help message and exit
@@ -97,6 +98,11 @@ Run ``most_common_words --help`` for a full list of options and their effects.
                             Chose output format. Default humanable.
       --pretty              Prettify output
       --skip-data-check     Skips nltk data installation
+      --console {stdout,stderr}
+                            Prints returned data to stdout or stderr
+      -o OUTPUT, --output OUTPUT
+                            Prints returned data to file. (Overrides existing
+                            file!)
 
 
 ---
