@@ -13,10 +13,6 @@ class Formatter(abc.ABC):
     def speech_part(self):
         return self.config['speech_part']
 
-    @property
-    def path(self):
-        return self.config['path']
-
     @abc.abstractmethod
     def format(self, data) -> str:
         pass

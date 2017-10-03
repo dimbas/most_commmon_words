@@ -4,20 +4,18 @@ import typing as t
 from nltk import pos_tag, word_tokenize
 
 
-def flat(source: t.Iterable) -> list:
+def flat(source: t.Iterable) -> t.Iterable:
     """
     >>> flat([(1,2), (3,4)])
     ... [1, 2, 3, 4]
     >>> flat([[1,2], [[3,4],5]])
     ... [1, 2, [3, 4], 5]
     """
-    ret = []
     for item in source:
-        if isinstance(item, list):
-            ret.extend(item)
+        if isinstance(item, (list, tuple, t.Generator)):
+            yield from item
         else:
-            ret.append(item)
-    return ret
+            yield item
 
 
 def is_magic_name(name: str) -> bool:
@@ -26,6 +24,10 @@ def is_magic_name(name: str) -> bool:
 
 def is_function(node: ast.AST):
     return isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))
+
+
+def is_assign(node: ast.AST):
+    return isinstance(node, ast.Assign)
 
 
 def tokenize_names(words: str):

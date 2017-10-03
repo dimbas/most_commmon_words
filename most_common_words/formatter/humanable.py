@@ -2,6 +2,10 @@ from .base import Formatter
 
 
 class HumanableFormatter(Formatter):
+    @property
+    def path(self):
+        return self.config['path']
+
     def format(self, data) -> str:
         indent = '\t' if self.is_pretty else ''
         return 'Most common {part} in path {path}\n'.format(part=self.speech_part, path=self.path) +\
