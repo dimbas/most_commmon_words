@@ -1,7 +1,5 @@
-import ast
 import typing as t
-
-from nltk import pos_tag, word_tokenize
+from pathlib import Path
 
 
 def flat(source: t.Iterable) -> t.Iterable:
@@ -18,18 +16,9 @@ def flat(source: t.Iterable) -> t.Iterable:
             yield item
 
 
-def is_magic_name(name: str) -> bool:
-    return name.startswith('__') and name.endswith('__')
-
-
-def is_function(node: ast.AST):
-    return isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))
-
-
-def is_assign(node: ast.AST):
-    return isinstance(node, ast.Assign)
-
-
-def tokenize_names(words: str):
-    # check if name is snake case or CamelCase
-    return pos_tag(word_tokenize(words.replace('_', ' ')))
+def get_all_files(path: Path, extension: str) -> t.Iterator[Path]:
+    for item in path.iterdir():
+        if item.is_dir():
+            yield from get_all_files(item, extension)
+        elif item.is_file() and item.name.endswith(extension):
+            yield item

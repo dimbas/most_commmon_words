@@ -2,19 +2,25 @@ import ast
 import typing as t
 from pathlib import Path
 
-from .utils import is_function, is_magic_name, is_assign, flat
+from nltk import pos_tag, word_tokenize
+
+from .utils import flat, get_all_files
 
 
-def get_all_files(path: Path) -> t.Iterator[Path]:
-    for item in path.iterdir():
-        if item.is_dir():
-            yield from get_all_files(item)
-        elif item.is_file() and item.name.endswith('.py'):
-            yield item
+def is_magic_name(name: str) -> bool:
+    return name.startswith('__') and name.endswith('__')
+
+
+def is_function(node: ast.AST):
+    return isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))
+
+
+def is_assign(node: ast.AST):
+    return isinstance(node, ast.Assign)
 
 
 def get_trees(path: Path) -> t.Iterator[ast.AST]:
-    for file in get_all_files(path):
+    for file in get_all_files(path, '.py'):
         content = file.read_text()
         try:
             tree = ast.parse(content)
@@ -40,3 +46,8 @@ def get_variables_from_path(path: Path) -> t.Iterable[ast.AST]:
 
     return flat(unfold_tuple(node) if isinstance(node, ast.Tuple) else node
                 for node in assigns)
+
+
+def tokenize_names(words: str):
+    # check if name is snake case or CamelCase
+    return pos_tag(word_tokenize(words.replace('_', ' ')))

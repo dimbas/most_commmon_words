@@ -196,6 +196,15 @@ Contains some helper functions
 
     Generator, yields item's content if its iterable (list, tuple, generator), otherwise yields item itself. Non recursive.
 
+:function: ``get_all_files(path: pathlib.Path, extension: str) -> Iterator[pathlib.Path]``
+
+    Generator, walks through folders recursively and yields all files with extension `extension`, wrapped in pathlib.Path.
+
+module ``most_common_words.py_parser``
+==================================
+
+Contains functions to parse python source code.
+
 :function: ``is_magic_name(name: str) -> bool``
 
     Checks, if name is magic (starts and ends with double-underline symbols) or not.
@@ -211,16 +220,6 @@ Contains some helper functions
 :function: ``tokenize_names(word: str) -> list[tuple[word, tag]]``
 
     Gets name, tokenize it and returns list of words, with nltk speech part tag.
-
-
-module ``most_common_words.paths``
-==================================
-
-Contains functions to work with os folders, to parse source code and build ast
-
-:function: ``get_all_files(path: pathlib.Path) -> Iterator[pathlib.Path]``
-
-    Generator, walks through folders recursively and yields all files, wrapped in pathlib.Path.
 
 :function: ``get_trees(path: pathlib.Path) -> Iterator[ast.AST]``
 

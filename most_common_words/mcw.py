@@ -2,8 +2,8 @@ import ast
 import typing as t
 from collections import Counter
 
-from .paths import get_functions_from_path, get_variables_from_path
-from .utils import flat, tokenize_names
+from .py_parser import get_functions_from_path, get_variables_from_path, tokenize_names
+from .utils import flat
 
 
 class MostCommonWords:
