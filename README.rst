@@ -10,6 +10,7 @@ The utility for determining the most used words in python source code
 
  * Python>=3.5.3
  * `nltk==3.2.4 <https://pypi.python.org/pypi/nltk>`_
+ * `github3.py==0.9.6 <https://pypi.python.org/pypi/github3.py/0.9.6>`_
 
 
 --------
