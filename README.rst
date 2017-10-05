@@ -16,7 +16,7 @@ The utility for determining the most used words in python source code
 Features
 --------
 
-Finds most used verbs or nouns in python project
+Finds most used verbs or nouns in local or github python project.
 
 -----
 Usage
@@ -26,13 +26,13 @@ As command line util
 
 .. code-block:: bash
 
-    $ python -m most_common_words -p path/to/your/project -c minimum_count -s verbs
+    $ most_common_words -c minimum_count -s verbs local -p path/to/your/project
 
 or
 
 .. code-block:: bash
 
-    $ most_common_words -p path/to/your/project -c minimum_count -s verbs
+    $ most_common_words -c minimum_count -s verbs github flask -u pallets
 
 As library
 
@@ -43,6 +43,24 @@ As library
     processor = mcw.MostCommonWords(config)
     mcw.check_nltk_data_installation(yes=True)  # if you don`t know if data installed or not. it will installed automatically
     words = processor.get_words()
+
+or with github project
+
+.. code-block:: python
+
+    from pathlib import Path
+    import most_common_words as mcw
+    config = {'project-name': 'project name', 'count': any_count, 'speech_part': 'verbs or nouns'}
+    gh = mcw.Client(config)
+    gh.find_project()
+    gh.download_project(archive_file_dest_fd)
+    gh.unzip_project(archive_file_dest_fd, project_folder_dest)
+    config['path'] = Path(project_folder_dest)
+    processor = mcw.MostCommonWords(config)
+    words = processor.get_words()
+
+For ``archive_file_dest_fd`` and ``project_folder_dest`` you can use respectively ``tempfile.NamedTemporaryFile`` (at least any file descriptor)
+and ``tempfile.TemporaryDirectory`` (in this case you must call ``name`` property on its object).
 
 You can print returned words through builtin print. Example:
 
@@ -86,7 +104,10 @@ Run ``most_common_words --help`` for a full list of options and their effects.
                              [--skip-data-check]
                              [--console {stdout,stderr} | -o OUTPUT]
                              [--functions | --variables]
+                             {local,github} ...
 
+    positional arguments:
+      {local,github}
 
     optional arguments:
       -h, --help            show this help message and exit
@@ -108,6 +129,36 @@ Run ``most_common_words --help`` for a full list of options and their effects.
       --functions           Goes through function names
       --variables           Goes through variable names
 
+    $ most_common_words local -h
+    usage: most_common_words local [-h] [-p PATH]
+
+    optional arguments:
+      -h, --help            show this help message and exit
+      -p PATH, --path PATH  Path to project. Default current folder.
+
+    $ most_common_words github -h
+    usage: most_common_words github [-h] [-u USER] [-l LOGIN] [-s SECRET]
+                                    [-t TOKEN]
+                                    project-name
+
+    positional arguments:
+      project-name
+
+    optional arguments:
+      -h, --help            show this help message and exit
+      -u USER, --user USER  Github project owner.
+      -l LOGIN, --login LOGIN
+                            Your Github login.
+      -s SECRET, --secret SECRET
+                            Your Github password.
+      -t TOKEN, --token TOKEN
+                            Your Github OAuth token.
+
+
+NOTE!
+
+Any common arguments must be gone BEFORE `github` or `local` subcommands!
+
 ---
 API
 ---
@@ -125,11 +176,11 @@ Main class
     Holds base configuration.
     Must have:
 
-        - path: ``pathlib.Path`` instance
-        - speech_part: `nouns` or `verbs`, str
-        - count: minimum number of occurrences words, int
-        - variables: go through variables in project, bool (excludes `functions` key)
-        - functions: go through functions in project, bool (excludes `variables` key)
+        - `path`: ``pathlib.Path`` instance
+        - `speech_part`: `nouns` or `verbs`, str
+        - `count`: minimum number of occurrences words, int
+        - `variables`: go through variables in project, bool (excludes `functions` key)
+        - `functions`: go through functions in project, bool (excludes `variables` key)
 
 :method: ``get_words() -> Iterable[tuple[word, count]]``
 
@@ -245,10 +296,10 @@ Encapsulates printer logic.
 
     Holds base configuration.
     Must have:
-        - format: one of `csv`, `json` or `humanable`
-        - writer: configured instance of any class from ``most_common_words.writer`` module (optional, excludes `output` and `console` keys)
-        - output: ``pathlib.Path`` instance (excludes `console` key)
-        - console: one of `stdout` or `stderr` (excludes `output` key)
+        - `format`: one of `csv`, `json` or `humanable`
+        - `writer`: configured instance of any class from ``most_common_words.writer`` module (optional, excludes `output` and `console` keys)
+        - `output`: ``pathlib.Path`` instance (excludes `console` key)
+        - `console`: one of `stdout` or `stderr` (excludes `output` key)
 
 :property: ``formatter``
 
@@ -278,8 +329,8 @@ Abstract base class for any new formatter.
 
     Holds base configuration.
     Must have:
-        - pretty: prettify output or not, bool
-        - speech_part: `nouns` or `verbs`, str
+        - `pretty`: prettify output or not, bool
+        - `speech_part`: `nouns` or `verbs`, str
 
 :property: ``is_pretty``
 
@@ -331,3 +382,67 @@ class ``most_common_words.writer.StderrWriter``
 -----------------------------------------------
 
 Writes data to stderr.
+
+module ``most_common_words.client``
+===================================
+
+Contains functionality  for interaction this GitHub API
+
+class ``most_common_words.client.GitHubClient``
+-----------------------------------------------
+
+Class for interaction this GitHub API
+
+:attr: ``config``
+
+    Holds base configuration.
+    Must have:
+        - `project-name`: github project you want to search
+        - all necessary keys for Printer: will used to create separate printer instance
+
+    Optional keys:
+        - `user`: github project owner. If presents, than finds exact project using name and owner.
+        - `login`: your github login.
+        - `secret`: your github password
+        - `token`: your github OAuth token
+
+:attr: ``found_project``
+
+    Holds reference to found github project.
+
+:attr: ``printer``
+
+    Separate printer for client, to interact with user.
+
+:property: ``project_name``
+
+    Returns `project-name` key from config.
+
+:proprety: ``project_owner``
+
+    Returns `user` key from config.
+
+:property: ``login``
+
+    Returns `login` key from config.
+
+:property: ``secret``
+
+    Returns `secret` key from config.
+
+:property: ``token``
+
+    Returns `token` key from config.
+
+:method: ``find_project()``
+
+    Finds github project, according on ``project_name`` property and, if presents, ``project_owner`` property. If cant find project without ``project_owner`` start interactive session, there user choose right project or interrupts session.
+    Found project writes to ``found_project`` attribute.
+
+:method: ``download_project(archive_fd: FileDescriptor)``
+
+    Downloads project zip archive and writes to file descriptor `archive_fd`.
+
+:method: ``unzip_project(archive_fd: FileDescriptor, project_folder: str)``
+
+    Unpacks project archive, writen to file descriptor `archive_fd` to `project_folder`
