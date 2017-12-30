@@ -47,11 +47,9 @@ def parseargs(args=None):
 
 
 def main(config):
-    try:
+    with tempfile.NamedTemporaryFile(prefix='mcw_temp_archive') as project_archive, \
+            tempfile.TemporaryDirectory(prefix='mcw_temp_folder') as project_folder:
         if 'github' in config:
-            project_archive = tempfile.NamedTemporaryFile(prefix='mcw_temp_archive')
-            project_folder = tempfile.TemporaryDirectory(prefix='mcw_temp_folder')
-
             client = GitHubClient(config)
             client.find_project()
             client.download_project(project_archive)
@@ -69,9 +67,31 @@ def main(config):
 
         words = processor.get_words()
         printer.print(words)
-    finally:
-        project_archive.close()
-        project_folder.cleanup()
+    # try:
+    #     if 'github' in config:
+    #         project_archive = tempfile.NamedTemporaryFile(prefix='mcw_temp_archive')
+    #         project_folder = tempfile.TemporaryDirectory(prefix='mcw_temp_folder')
+    #
+    #         client = GitHubClient(config)
+    #         client.find_project()
+    #         client.download_project(project_archive)
+    #         client.unzip_project(project_archive, project_folder.name)
+    #
+    #         config['path'] = Path(project_folder.name)
+    #
+    #     processor = MostCommonWords(config)
+    #     printer = Printer(config)
+    #
+    #     if not config['skip_data_check']:
+    #         ret = check_nltk_data_installation()
+    #         if ret is not None:
+    #             return ret
+    #
+    #     words = processor.get_words()
+    #     printer.print(words)
+    # finally:
+    #     project_archive.close()
+    #     project_folder.cleanup()
 
 
 def cli():

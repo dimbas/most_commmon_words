@@ -12,7 +12,7 @@ class HumanableFormatter(Formatter):
 
     def format(self, data) -> str:
         indent = '\t' if self.is_pretty else ''
-        target = 'project {name}'.format(name=self.project_name) if self.config['github'] \
+        target = 'project {name}'.format(name=self.project_name) if self.config.get('github') \
             else 'path {path}'.format(path=self.path)
 
         return 'Most common {part} in {target}\n'.format(part=self.speech_part, target=target) +\
